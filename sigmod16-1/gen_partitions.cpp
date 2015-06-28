@@ -3,6 +3,7 @@
 #include "sstream"
 #include "map"
 #include "set"
+#include "queue"
 #include "time.h"
 
 
@@ -96,19 +97,74 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 		}
 	}
 
-	else if (hop == 1) {
+	else {
+		/** v 2 hop*/
+		map<int, int> v2hop;
+		set<int> checked;
+		queue<int> q;
 		for (set<int>::iterator it = partiton_vertices.begin(); it != partiton_vertices.end(); it++) {
-			int vid = *it;
-			set<int> edges;
-			for (set<int>::iterator it2 = graph.at(vid).begin(); it2 != graph.at(vid).end(); it2++) {
-				int tid = *it2;
-				/** add all edges, when the node is not in this partiton, add it as virtual nodes. */
-				if (partiton_vertices.find(tid) == partiton_vertices.end()) {
-					virtual_vertices.insert(tid);
+			q.push(*it);
+			v2hop.insert(pair<int, int>(*it, 0));
+		}
+		while (!q.empty()) {
+			int v = q.front();
+			q.pop();
+			int next_hop = v2hop.at(v) + 1;
+			// printf("processing %d, next_hop = %d, ", v, next_hop);
+			if (checked.find(v) == checked.end() && next_hop <= hop) {
+				// printf("not checked before.\n");
+				set<int> edges;
+				for (set<int>::iterator it = graph.at(v).begin(); it != graph.at(v).end(); it++) {
+					int tid = *it;
+					// printf("tid = %d, ", tid);
+					/** add all edges, when the node is not in this partiton, add it as virtual nodes. */
+					if (partiton_vertices.find(tid) == partiton_vertices.end()) {
+						// printf("is_virtual, ");
+						virtual_vertices.insert(tid);
+						if (v2hop.find(tid) == v2hop.end()) {
+							// printf("add_to map = <%d,%d> ", tid, next_hop);
+							v2hop.insert(pair<int, int>(tid, next_hop));
+							q.push(tid);
+						}
+					}
+					edges.insert(tid);
 				}
-				edges.insert(tid);
+				if (v2es.find(v) == v2es.end()) {
+					v2es.insert(pair<int, set<int> >(v, edges));
+				}
+				else {
+					for (set<int>::iterator it = edges.begin(); it != edges.end(); it++) {
+						v2es.at(v).insert(*it);
+					}
+				}
+
+
+				for (set<int>::iterator it = t2fs.at(v).begin(); it != t2fs.at(v).end(); it++) {
+					int fid = *it;
+					// printf("fid = %d, ", fid);
+					/** add all edges, when the node is not in this partiton, add it as virtual nodes. */
+					if (partiton_vertices.find(fid) == partiton_vertices.end()) {
+						// printf("is_virtual, ");
+						virtual_vertices.insert(fid);
+						if (v2hop.find(fid) == v2hop.end()) {
+							// printf("add_to map = <%d,%d>, ", fid, next_hop);
+							v2hop.insert(pair<int, int>(fid, next_hop));
+							q.push(fid);
+						}
+						if (v2es.find(fid) == v2es.end()) {
+							// printf("not in v2es map");
+							set<int> edges;
+							v2es.insert(pair<int, set<int> >(fid, edges));
+						}
+						v2es.at(fid).insert(v);
+					}
+					// printf("\n");
+				}
+				checked.insert(v);
 			}
-			v2es.insert(pair<int, set<int> >(vid, edges));
+			else {
+				// cout << endl;
+			}
 		}
 	}
 
@@ -143,6 +199,7 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 	}
 	efout.close();
 	cout << "output parition e_file:" << pfile << ".e" << ", e_size = " << edge_size << endl;
+	return true;
 }
 
 
@@ -150,7 +207,7 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 int main(int argc, char *argv[]) {
 
 	string filename = "./datademo/g1";
-	int prefetch = 0;
+	int prefetch = 1;
 	int k = 2;
 	if (argc < 4) {
 		cout << "para: graphfile_basename, prefetch_hop, partition_k" << endl;

@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 	int elabelindex = 0;
 
 	int subj, pred, obj;
-	ofstream fout("yago2_numeric.dat");
+	ofstream fout("yago2.e");
 
 	int i = 0;
 
@@ -61,6 +61,11 @@ int main(int argc, char *argv[]) {
 			stringstream ss(line);
 			// cout<<line<<endl;
 			ss >> item_id >> item_subj >> item_pred >> item_obj;
+
+			if(item_pred.find("hasGender")!=-1){
+				continue;
+			}
+
 			if (vnum_map.find(item_subj) == vnum_map.end()) {
 				vnum_map.insert(pair<string, int>(item_subj, vlabelindex++));
 			}
@@ -75,7 +80,7 @@ int main(int argc, char *argv[]) {
 				vnum_map.insert(pair<string, int>(item_obj, vlabelindex++));
 			}
 			obj = vnum_map.at(item_obj);
-			fout << subj << "\t" << pred << "\t" << obj << endl;
+			fout << subj << "\t" << obj << "\t" << pred << endl;
 
 			if (edgetype_subject.find(item_pred) != edgetype_subject.end()) {
 				string sub_label = edgetype_subject.at(item_pred);

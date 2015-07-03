@@ -67,6 +67,8 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 	map<int, set<int> > v2es;
 	map<int, int> v2hop;
 
+	set<int> border_vertices;
+
 	/**load the partition*/
 	string line;
 	int vid;
@@ -122,6 +124,9 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 					if (partiton_vertices.find(tid) == partiton_vertices.end()) {
 						// printf("is_virtual, ");
 						virtual_vertices.insert(tid);
+						if (partiton_vertices.find(v) != partiton_vertices.end()) {
+							border_vertices.insert(v);
+						}
 						if (v2hop.find(tid) == v2hop.end()) {
 							// printf("add_to map = <%d,%d> ", tid, next_hop);
 							v2hop.insert(pair<int, int>(tid, next_hop));
@@ -147,6 +152,11 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 					if (partiton_vertices.find(fid) == partiton_vertices.end()) {
 						// printf("is_virtual, ");
 						virtual_vertices.insert(fid);
+
+						if (partiton_vertices.find(v) != partiton_vertices.end()) {
+							border_vertices.insert(v);
+						}
+
 						if (v2hop.find(fid) == v2hop.end()) {
 							// printf("add_to map = <%d,%d>, ", fid, next_hop);
 							v2hop.insert(pair<int, int>(fid, next_hop));
@@ -199,6 +209,7 @@ bool gen_partition(string pfile, int hop, map<int, set<int> > &graph, map<int, s
 
 	t_end = time(NULL) ;
 	cout << "output parition e_file:" << pfile << ".e" << ", e_size = " << edge_size << endl;
+	cout << "border_vertices_size = " << border_vertices.size()<<endl;
 	printf("gen_partitions::time: %.2f s\n", difftime(t_end, t_start));
 	return true;
 }
